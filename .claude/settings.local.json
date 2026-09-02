@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:aws-agent-hackathon.devpost.com)",
+      "WebFetch(domain:agentsforhumans.devpost.com)",
+      "WebSearch",
+      "WebFetch(domain:info.devpost.com)"
+    ]
+  }
+}
