@@ -1,0 +1,26 @@
+# Steward — pinned dependencies (versions verified 2026-09-03; see IMPLEMENTATION_PLAN.md §7.1)
+# Re-check `agentcore --help` and Bedrock model IDs in-account before the final build.
+
+# --- Mandatory agent SDK ---
+strands-agents==1.54.0
+strands-agents-tools==0.8.7
+
+# --- Amazon Bedrock AgentCore (recommended; boosts Technical score) ---
+bedrock-agentcore==1.22.0
+bedrock-agentcore-starter-toolkit==0.3.12   # legacy Python CLI; prefer npm @aws/agentcore for deploy (see §7.3)
+
+# --- AWS + infra ---
+boto3>=1.35.0
+
+# --- Config / utils ---
+pyyaml>=6.0
+
+# --- Observability (AgentCore/CloudWatch) ---
+aws-opentelemetry-distro>=0.10.0
+
+# --- Dev / test ---
+pytest>=8.0
+pytest-cov>=5.0
+
+# --- Optional: Browser tool (stretch only) ---
+# playwright>=1.47

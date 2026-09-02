@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.python-version
+
+# Env / secrets — NEVER commit real credentials
+.env
+.env.local
+*.pem
+*.key
+credentials.json
+token.json
+service-account*.json
+
+# AgentCore / AWS
+.bedrock_agentcore.yaml
+.aws-sam/
+*.tfstate
+*.tfstate.*
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local demo artifacts
+scratch/
+*.local.json

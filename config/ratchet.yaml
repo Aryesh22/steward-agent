@@ -1,0 +1,33 @@
+# Steward — Trust Ratchet configuration (single place to tune the mechanic).
+# Spec: IMPLEMENTATION_PLAN.md §3.  Do not scatter these constants in code — read them from here.
+
+promotion_threshold: 5          # consecutive verified-correct actions to promote one level
+undo_window_seconds: 900        # L1 (SUPERVISED) undo window = 15 min
+default_start_level: 0          # everything starts at L0 (ASSISTED)
+confidence_floor_global: 0.55   # never auto-act below this, regardless of the cost-ratio gate
+
+# Autonomy levels (for reference; enforced in app/ratchet.py):
+#   0 = ASSISTED    -> propose only; human must approve before execution
+#   1 = SUPERVISED  -> auto-execute, notify, allow undo within undo_window_seconds
+#   2 = AUTONOMOUS  -> execute silently; audit-logged only
+
+# Per-task-type hard ceilings (effective_level = min(earned_level, cap)). See §3.2.
+task_caps:
+  volunteer_reminder: 2         # fast graduate — low cost of error
+  shift_backfill: 2
+  grant_deadline_alert: 2       # informational
+  donation_match: 1             # perishable stakes — keep a human in the loop
+  grant_report_draft: 1
+  grant_report_file: 0          # IRREVERSIBLE (funder relationship) — always ask
+  money_movement: 0             # HARD CAP — out of MVP scope entirely
+  pii_disclosure: 0             # HARD CAP — consent/selective-disclosure required
+
+# Cost ratio per task-type = cost_of_asking / cost_of_error, in [0,1].
+# Confidence gate: auto-act only if confidence >= 1 - cost_ratio (see §3.5).
+cost_ratios:
+  volunteer_reminder: 0.30
+  shift_backfill: 0.25
+  grant_deadline_alert: 0.40
+  donation_match: 0.10
+  grant_report_draft: 0.15
+  grant_report_file: 0.02
