@@ -73,7 +73,7 @@
 - `pytest tests/test_ratchet.py` green; ceilings provably enforced.
 - Reading/writing trust state round-trips through DynamoDB; `TrustState` tab reflects it.
 - Sheets/Twilio `@tool`s can read a row and send a test SMS.
-- [ ] **Exit note:** _____
+- [x] **Exit note (2026-09-03):** Ratchet **logic complete + proven** — `app/ratchet.py` at **100% coverage, 24 tests pass** offline (ceilings, promotion/demotion, confidence gate, org-keyed persistence). `infra/ddb.py` (DynamoDBTrustStore + create_tables), `app/tools/{twilio,sheets}.py`, and `scripts/seed_sheet.py` are **written but not yet executed** — they need live AWS/Twilio/Google creds (blocked on Phase 0 account setup). Committed `bd43212`. **Remaining before P2:** run `create_tables()`, `seed_sheet.py`, and a live SMS test once creds exist.
 
 **Risks:** race between sweep + inbound events on counters → mitigated by atomic conditional writes (P1.4).
 
