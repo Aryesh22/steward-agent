@@ -190,15 +190,16 @@ def _send_coordinator_alert_mock(summary: str, options: list, org_id: str = "dem
 
 
 def _send_coordinator_sms(summary: str, options: list) -> None:
-    """Send a real SMS to the coordinator (requires Twilio creds)."""
+    """Send a real SMS to the coordinator via Amazon SNS."""
     try:
-        from app.tools.twilio import send_sms
-        coordinator_phone = os.getenv("COORDINATOR_PHONE", "")
+        from app.tools.sms import send_sms
+        coordinator_phone = os.getenv("COORDINATOR_PHONE", "").strip()
         if not coordinator_phone:
             print("[human_review] Warning: COORDINATOR_PHONE not set; SMS not sent.")
             return
         opts = " / ".join(str(o) for o in options[:3])  # SMS length limit
         msg = f"Steward needs your decision:\n{summary[:120]}\nReply: {opts}"
         send_sms(coordinator_phone, msg[:160])
+        print(f"[human_review] ✅ SNS SMS sent to coordinator ({coordinator_phone}).")
     except Exception as e:
-        print(f"[human_review] Warning: failed to send coordinator SMS: {e}")
+        print(f"[human_review] Warning: failed to send coordinator SNS SMS: {e}")

@@ -41,3 +41,7 @@ htmlcov/
 # Local demo artifacts
 scratch/
 *.local.json
+
+IMPLEMENTATION_PLAN.md
+ARCHITECTURE.md
+PHASED_IMPLEMENTATION.md

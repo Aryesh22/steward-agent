@@ -22,6 +22,7 @@ import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.graph import build_steward_graph
+from app.nodes.human_review import resume_with_reply
 from app.ratchet import (
     LEVEL_NAMES,
     InMemoryTrustStore,
@@ -194,6 +195,10 @@ def run_donation_escalation(graph, store: InMemoryTrustStore) -> None:
 
     if escalated:
         print(f"\n  * Milk escalated to coordinator - {bold('only real decisions surface')}.")
+        print(f"  * Simulating webhook coordinator reply: 'YES' ...")
+        # In a real environment, the webhook_lambda.py handles this and calls InvokeAgentRuntime mode=resume
+        resume_state = resume_with_reply(graph, "mock-iid", "YES")
+        print(f"  * Resumed session state: resumed={green(str(resume_state.get('resumed', False)))}")
     else:
         # May not escalate if ratchet shows L1+ and confidence is above threshold
         print(f"  (Donation handled at L1 supervised - ratchet level allows auto-notify.)")

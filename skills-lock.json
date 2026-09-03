@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "ai-sdk": {
+      "source": "vercel/ai",
+      "sourceType": "github",
+      "skillPath": "skills/use-ai-sdk/SKILL.md",
+      "computedHash": "da25c27a274ef2b71017c255f95a26350d2519765a75cb54ee1a37872b121dab"
+    },
+    "aws-serverless": {
+      "source": "aws/agent-toolkit-for-aws",
+      "sourceType": "github",
+      "skillPath": "skills/core-skills/aws-serverless/SKILL.md",
+      "computedHash": "da04d6caff23d104fc40559f2cee624dceacbc05e4af2e70cd84e1a9e14415e3"
+    },
+    "aws-strands": {
+      "source": "hoodini/ai-agents-skills",
+      "sourceType": "github",
+      "skillPath": "skills/aws-strands/SKILL.md",
+      "computedHash": "1dab591079560adc58004f3be9c99bd16b530a34b659b00c4d7136f49bafd3ae"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
+    },
+    "python-design-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "skillPath": "plugins/python-development/skills/python-design-patterns/SKILL.md",
+      "computedHash": "e9340dc302515d844fb5c4d6a14da72bed62ef50ab8b56540dd80a1a22a3c059"
+    }
+  }
+}

@@ -23,10 +23,12 @@ The **local scaffold** (repo tree, license, config, stubs) is already generated.
   - Confirm the **exact inference-profile IDs available in your region** and put them in `.env`
     (`MODEL_HARD`, `MODEL_CHEAP`). Record the region in `IMPLEMENTATION_PLAN.md` §16 D3/D8.
 
-- [ ] **P0.4 — Twilio.**
-  - Sign up: https://www.twilio.com/ ; buy an SMS-capable phone number.
-  - Copy Account SID, Auth Token, and the from-number into `.env`
-    (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`). Set `COORDINATOR_PHONE` to your demo phone.
+- [x] **P0.4 — SMS via Amazon SNS (no Twilio needed).**
+  - SMS is sent via **Amazon SNS** using your existing AWS credentials (boto3).
+  - No account signup, no phone number to buy, no DLT registration for outbound.
+  - Just set `COORDINATOR_PHONE=+91XXXXXXXXXX` and `SNS_SENDER_ID=Steward` in `.env`.
+  - Ensure your IAM user/role has the `sns:Publish` permission.
+  - ✅ Done when: AWS creds are set and `sns:Publish` works (verified in P0.9).
 
 - [ ] **P0.5 — Google Sheets substrate.**
   - Google Cloud console → new project → enable the **Google Sheets API**.

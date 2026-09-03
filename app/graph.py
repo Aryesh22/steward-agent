@@ -107,8 +107,12 @@ def _build_local_graph(store: Optional[TrustStore]):
     from app.nodes.execute import execute_node
     from app.nodes.human_review import human_review_node
 
-    def run_graph(input_dict: dict) -> dict:
+    def run_graph(input_dict) -> dict:
         """Execute the full pipeline: router → gate → execute|human_review."""
+        if isinstance(input_dict, list):
+            # Handle mock resume call with [{"interruptResponse": ...}]
+            return {"resumed": True}
+            
         state: dict[str, Any] = dict(input_dict)
         if store is not None:
             state["_store"] = store

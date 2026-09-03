@@ -119,10 +119,10 @@ def _notify_l1(org_id: str, task_type: str, result: dict) -> None:
               f"Reply UNDO within 15 min to reverse. Details: {str(result)[:100]}")
         return
 
-    # Production path: SMS the coordinator
+    # Production path: SMS the coordinator via Amazon SNS
     try:
-        from app.tools.twilio import send_sms
-        coordinator_phone = os.getenv("COORDINATOR_PHONE", "")
+        from app.tools.sms import send_sms
+        coordinator_phone = os.getenv("COORDINATOR_PHONE", "").strip()
         if coordinator_phone:
             action = result.get("action", "action taken")
             notes = result.get("notes", "")
@@ -132,7 +132,7 @@ def _notify_l1(org_id: str, task_type: str, result: dict) -> None:
             )
             send_sms(coordinator_phone, msg[:160])
     except Exception as e:
-        print(f"[L1-notify] Warning: could not send coordinator SMS: {e}")
+        print(f"[L1-notify] Warning: could not send coordinator SNS SMS: {e}")
 
 
 def _promotion_threshold() -> int:

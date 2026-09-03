@@ -13,7 +13,7 @@
 | ReviewerAgent | Independent verification of each action (feeds graduation) | Strands `Agent` (cheap model) |
 | Trust Ratchet gate | Decides act-vs-escalate per task-type (autonomy + confidence gates) | Strands **Graph** conditional edge + **DynamoDB** |
 | human_review node | Escalation surface — pause and ask the coordinator | Strands **interrupt** → **Twilio** SMS |
-| Tools (Sheets, Twilio) | Read/write the org Sheet; send SMS | AgentCore **Gateway** (MCP) + **Identity** |
+| Tools (Sheets, SNS) | Read/write the org Sheet; send SMS | AgentCore **Gateway** (MCP) + **Identity** |
 | Trust state | Per-task-type autonomy counters, keyed by `org_id` | **DynamoDB** (`steward_trust`) |
 | Audit journal | Append-only record of every action + confidence + reasoning | **DynamoDB** (`steward_audit`) + CloudWatch |
 | Institutional knowledge | Org facts/preferences/summaries surviving turnover | AgentCore **Memory** |
@@ -23,7 +23,7 @@
 ## Two data flows
 1. **Nightly sweep:** EventBridge Scheduler → `InvokeAgentRuntime` (`mode:"sweep"`) → read Sheet → per-task ratchet
    gate → execute or escalate → ReviewerAgent verifies → ratchet updates. Long runs use the async-task pattern.
-2. **Inbound event:** Twilio SMS → API Gateway → Lambda → `InvokeAgentRuntime` (`mode:"event"`) → Matcher (L1) →
+2. **Inbound event:** Inbound SMS → API Gateway → Lambda → `InvokeAgentRuntime` (`mode:"event"`) → Matcher (L1) →
    escalate if a perishable can't be placed / confidence low.
 
 ## Key design decisions (see IMPLEMENTATION_PLAN.md §16)
@@ -31,4 +31,5 @@
 - Trust keyed by **`org_id`**, not user → institutional persistence.
 - Interrupts come from the **Strands** layer; scheduling via **EventBridge Scheduler + async task** (no native
   Runtime interrupt or EventBridge target).
-- Sheets/Twilio start as local `@tool`s, migrate to **Gateway** MCP tools by Phase 4.
+- **SMS via Amazon SNS** (boto3, no extra credentials — reuses existing IAM/AWS creds); replaces Twilio.
+  Sheets/SNS start as local `@tool`s, migrate to **Gateway** MCP tools by Phase 4.

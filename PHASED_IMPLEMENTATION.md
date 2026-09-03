@@ -33,7 +33,7 @@
 - [ ] **P0.1** Create/confirm **AWS account** + **AWS Builder ID** (required for submission — §2.4). `∥`
 - [ ] **P0.2** ⚠️ **Request the $50 AWS credits** via `https://forms.gle/Ssr8zLw4afKg114M7` — **before Sept 11, 12:00 PM PT** (§2.8). `∥`
 - [ ] **P0.3** In the **Bedrock console**, enable **model access** for the two tiers (Sonnet `global.anthropic.claude-sonnet-4-6` + a cheap model e.g. Nova Lite). Record the exact working inference-profile IDs and region in §16 D3/D8. `∥`
-- [ ] **P0.4** Create a **Twilio** account, buy a phone number (SMS), capture API credentials. `∥`
+- [ ] **P0.4** ~~Twilio~~ **Amazon SNS** is used for SMS — no separate account needed; SNS is accessed via existing AWS credentials (boto3). Verify `COORDINATOR_PHONE` is set and AWS creds allow `sns:Publish`. `∥`
 - [ ] **P0.5** Create a **Google Cloud** project, enable the **Sheets API**, create an OAuth client (for AgentCore Identity's Google provider). Create the demo **Google Sheet** with the tabs in §6.1. `∥`
 - [ ] **P0.6** Create a **fresh public GitHub repo** (commits must fall inside the submission window — §2.7). Add **LICENSE (MIT or Apache)** on the first commit (hard gate — §2.6).
 - [ ] **P0.7** Scaffold the repo tree from §9 with stub files + `requirements.txt` pinned to §7.1 versions. `python -c "import strands, bedrock_agentcore"` succeeds in a fresh venv (Python 3.10+).
@@ -42,7 +42,7 @@
 
 ### Exit Gate (all must pass)
 - Credits requested; Builder ID exists; Bedrock model access confirmed with real IDs recorded.
-- Twilio number + Google Sheet + OAuth client exist and are reachable.
+- ~~Twilio number~~  **Amazon SNS** + `COORDINATOR_PHONE` verified; Google Sheet + OAuth client exist and are reachable.
 - Public repo with LICENSE + scaffolded tree; a trivial `Agent("hi")()` call returns a response locally.
 - Residency cleared.
 - [ ] **Exit note:** _____
@@ -66,14 +66,14 @@
 - [ ] **P1.3** Write `tests/test_ratchet.py` covering: promotion after N verified-correct; reset on demotion; ceiling never exceeded (esp. L0-capped `grant_report_file`/`money_movement`/`pii_disclosure` **always** ask); confidence-gate math; one-level-at-a-time movement. **Target: 100% branch coverage of `ratchet.py`.**
 - [ ] **P1.4** Create **DynamoDB** tables `steward_trust` and `steward_audit` (`infra/ddb.py`) with the schemas in §6.2; use **atomic conditional updates** for counters. `∥`
 - [ ] **P1.5** Wire `ratchet.py` state read/write to `steward_trust`; append every decision to `steward_audit`. Mirror current levels to the Sheet `TrustState` tab (§3.6).
-- [ ] **P1.6** Implement local `@tool` wrappers `app/tools/sheets.py` + `app/tools/twilio.py` (REST calls) — the fast path per §16 D1. `∥`
+- [ ] **P1.6** Implement local `@tool` wrappers `app/tools/sheets.py` + `app/tools/sms.py` (boto3 SNS — replaces Twilio) — the fast path per §16 D1. `∥`
 - [ ] **P1.7** `scripts/seed_sheet.py` populates the demo Sheet with realistic volunteers/shifts/donations/needs/grants.
 
 ### Exit Gate
 - `pytest tests/test_ratchet.py` green; ceilings provably enforced.
 - Reading/writing trust state round-trips through DynamoDB; `TrustState` tab reflects it.
-- Sheets/Twilio `@tool`s can read a row and send a test SMS.
-- [x] **Exit note (2026-09-03):** Ratchet **logic complete + proven** — `app/ratchet.py` at **100% coverage, 24 tests pass** offline (ceilings, promotion/demotion, confidence gate, org-keyed persistence). `infra/ddb.py` (DynamoDBTrustStore + create_tables), `app/tools/{twilio,sheets}.py`, and `scripts/seed_sheet.py` are **written but not yet executed** — they need live AWS/Twilio/Google creds (blocked on Phase 0 account setup). Committed `bd43212`. **Remaining before P2:** run `create_tables()`, `seed_sheet.py`, and a live SMS test once creds exist.
+- Sheets/SNS `@tool`s can read a row and send a test SMS.
+- [x] **Exit note (2026-09-03 → updated 2026-09-04):** Ratchet **logic complete + proven** — `app/ratchet.py` at **100% coverage, 24 tests pass** offline (ceilings, promotion/demotion, confidence gate, org-keyed persistence). `infra/ddb.py` (DynamoDBTrustStore + create_tables), `app/tools/sms.py` (Amazon SNS — replaces Twilio), `app/tools/sheets.py`, and `scripts/seed_sheet.py` are **written**. SMS now uses SNS (boto3); no Twilio account needed. **45/45 tests green locally.** **Remaining before P2 fully closed:** run `create_tables()` + `seed_sheet.py` once AWS creds are set; send a live SNS test SMS.
 
 **Risks:** race between sweep + inbound events on counters → mitigated by atomic conditional writes (P1.4).
 
@@ -87,7 +87,7 @@
 
 ### Tasks
 - [ ] **P2.1** Implement the **Router/orchestrator** agent (`app/agents/router.py`) — classifies an input into a `task_type` + emits a `confidence`.
-- [ ] **P2.2** Implement the three **specialists as Agents-as-Tools** (§8.2), each with its focused prompt + the Sheets/Twilio tools: `recruiter.py` (confirm/backfill), `matcher.py` (donation→need), `grant.py` (deadline/draft/file). `∥`
+- [ ] **P2.2** Implement the three **specialists as Agents-as-Tools** (§8.2), each with its focused prompt + the Sheets/SNS tools: `recruiter.py` (confirm/backfill), `matcher.py` (donation→need), `grant.py` (deadline/draft/file). `∥`
 - [ ] **P2.3** Implement the **ReviewerAgent** (`app/agents/reviewer.py`, §8.4) — separate turn returning `{correct, confidence, reason}`. Use the **cheap** model.
 - [ ] **P2.4** Build the **Strands Graph** (`app/graph.py`, §8.3): `router → (ratchet_condition) → execute → review`, plus `router → human_review` when the gate fails. Feed reviewer verdict into `record_outcome`.
 - [ ] **P2.5** Assign models per agent (§7.2): cheap for router/reviewer/simple steps, Sonnet for grant drafting / ambiguous matching.
@@ -111,9 +111,9 @@
 **Entry gate:** P2 Exit Gate passed.
 
 ### Tasks
-- [ ] **P3.1** Implement the escalation surface (`app/nodes/human_review.py`, §8.5): `@tool(context=True)` raising `tool_context.interrupt(...)`; entrypoint detects `stop_reason == "interrupt"`, texts `reason.summary` to the coordinator via Twilio.
+- [ ] **P3.1** Implement the escalation surface (`app/nodes/human_review.py`, §8.5): `@tool(context=True)` raising `tool_context.interrupt(...)`; entrypoint detects `stop_reason == "interrupt"`, texts `reason.summary` to the coordinator via **Amazon SNS**.
 - [ ] **P3.2** Implement **resume**: inbound reply → feed `interruptResponse` block back → graph continues from the interruption point. Requires a stable per-org `runtimeSessionId` (§8.5).
-- [ ] **P3.3** Build the **inbound webhook** (`infra/webhook_lambda.py`, §8.8): Twilio → API Gateway → Lambda → `InvokeAgentRuntime` (`mode:"event"`). Handles both donation SMS and coordinator replies. `∥`
+- [ ] **P3.3** Build the **inbound webhook** (`infra/webhook_lambda.py`, §8.8): inbound SMS → API Gateway → Lambda → `InvokeAgentRuntime` (`mode:"event"`). Handles both donation SMS and coordinator replies. *(Inbound SMS can be received via a virtual number service or the demo can use an email/web fallback — no Twilio number required.)* `∥`
 - [ ] **P3.4** Implement the **nightly sweep** logic + `infra/scheduler.py`: EventBridge Scheduler universal target → `InvokeAgentRuntime` (`mode:"sweep"`). Use the **async task pattern** (`app.add_async_task`/`complete_async_task`) so the entrypoint returns fast and `/ping` = `HealthyBusy` (§8.8). `∥`
 - [ ] **P3.5** Implement the **donation-match escalation** end-to-end: donation arrives → matcher (L1 supervised) → can't place a perishable in time / low confidence → escalate → coordinator decides → resume.
 - [ ] **P3.6** Test: an L0-capped task (`grant_report_file`) **always** produces an interrupt (never auto-executes), regardless of earned trust.
@@ -136,14 +136,14 @@
 
 ### Tasks
 - [ ] **P4.1** Wrap the app in `BedrockAgentCoreApp` (`app/main.py`, §8.1) and deploy to **Runtime** via the **npm `@aws/agentcore`** CLI (§7.3). Confirm `agentcore invoke` works.
-- [ ] **P4.2** Stand up an **AgentCore Gateway**; expose **Google Sheets** and **Twilio** as **OpenAPI targets** → MCP tools (§8.7). Migrate `app/tools/*` from local `@tool` to Gateway calls (§16 D1). `∥`
-- [ ] **P4.3** Configure **AgentCore Identity**: Google OAuth (3-legged) for Sheets, API-key provider for Twilio; verify token-vault-backed calls succeed (§8.7). `∥`
+- [ ] **P4.2** Stand up an **AgentCore Gateway**; expose **Google Sheets** and **Amazon SNS** as **OpenAPI targets** → MCP tools (§8.7). Migrate `app/tools/*` from local `@tool` to Gateway calls (§16 D1). `∥`
+- [ ] **P4.3** Configure **AgentCore Identity**: Google OAuth (3-legged) for Sheets, IAM role for SNS (already in-account, no extra key provider needed); verify token-vault-backed calls succeed (§8.7). `∥`
 - [ ] **P4.4** Create the **AgentCore Memory** resource (`app/memory.py`, §8.6) with semantic + user-preference + summary strategies, **namespaced by `org_id`**. Write session summaries; retrieve org facts in the router. `∥`
 - [ ] **P4.5** Enable **Observability**: turn on CloudWatch Transaction Search, instrument with ADOT, confirm traces/spans/token metrics land in CloudWatch (§8.9). Set **log retention + X-Ray sampling** low (cost — §12). `∥`
 - [ ] **P4.6** Re-run the full P2/P3 scenarios **against the deployed Runtime** (not local).
 
 ### Exit Gate
-- Agent runs on AgentCore Runtime; Sheets/Twilio calls go through Gateway + Identity.
+- Agent runs on AgentCore Runtime; Sheets/SNS calls go through Gateway + Identity.
 - Memory reads/writes work at the org namespace.
 - Traces visible in CloudWatch.
 - End-to-end volunteer + donation + grant scenarios pass on the deployed agent.
