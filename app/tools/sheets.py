@@ -95,6 +95,66 @@ def _header(tab: str) -> list[str]:
     return vals[0] if vals else []
 
 
+
+# --- Strands @tool wrappers (used by specialist agents) ---
+def as_strands_tools() -> list:
+    """Return Strands @tool-decorated callables for read_tab, append_row, update_row.
+
+    Imported lazily so this module stays importable without strands installed.
+    """
+    from strands import tool
+
+    @tool
+    def read_sheet_tab(tab: str) -> str:
+        """Read all rows from a Google Sheet tab, returned as a JSON list of dicts.
+
+        Args:
+            tab: The tab name to read (e.g. 'Volunteers', 'Shifts', 'Donations').
+        """
+        import json
+        try:
+            rows = read_tab(tab)
+            return json.dumps(rows)
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    @tool
+    def append_sheet_row(tab: str, row_json: str) -> str:
+        """Append a new row to a Google Sheet tab.
+
+        Args:
+            tab: The tab name.
+            row_json: JSON object with column names as keys.
+        """
+        import json
+        try:
+            row = json.loads(row_json)
+            append_row(tab, row)
+            return "ok"
+        except Exception as e:
+            return f"error: {e}"
+
+    @tool
+    def update_sheet_row(tab: str, key_col: str, key_val: str, updates_json: str) -> str:
+        """Update the first row in a tab where key_col == key_val.
+
+        Args:
+            tab: The tab name.
+            key_col: Column name to match (e.g. 'donation_id').
+            key_val: Value to match.
+            updates_json: JSON object of column → new value pairs.
+        """
+        import json
+        try:
+            updates = json.loads(updates_json)
+            update_row(tab, key_col, key_val, updates)
+            return "ok"
+        except Exception as e:
+            return f"error: {e}"
+
+    return [read_sheet_tab, append_sheet_row, update_sheet_row]
+
+
 # --- Trust-state mirror (called by ratchet.record_outcome via sheet_mirror callback, §3.6) ---
 def mirror_trust_state(state) -> None:  # noqa: ANN001  (app.ratchet.TrustState)
     """Upsert the TrustState tab so the ratchet is visible to humans / on camera. P1.5."""
